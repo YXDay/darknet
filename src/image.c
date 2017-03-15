@@ -4,6 +4,8 @@
 #include "cuda.h"
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#include <stdlib.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -14,7 +16,6 @@
 #include "opencv2/highgui/highgui_c.h"
 #include "opencv2/imgproc/imgproc_c.h"
 #endif
-
 
 int windows = 0;
 
@@ -66,7 +67,7 @@ image tile_images(image a, image b, int dx)
     if(a.w == 0) return copy_image(b);
     image c = make_image(a.w + b.w + dx, (a.h > b.h) ? a.h : b.h, (a.c > b.c) ? a.c : b.c);
     fill_cpu(c.w*c.h*c.c, 1, c.data, 1);
-    embed_image(a, c, 0, 0); 
+    embed_image(a, c, 0, 0);
     composite_image(b, c, a.w + dx, 0);
     return c;
 }
@@ -217,11 +218,24 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
             if(top < 0) top = 0;
             if(bot > im.h-1) bot = im.h-1;
 
-            draw_box_width(im, left, top, right, bot, width, red, green, blue);
-            if (alphabet) {
-                image label = get_label(alphabet, names[class], (im.h*.03)/10);
-                draw_label(im, top + width, left, label, rgb);
-            }
+            // 获取时间
+            time_t timep;
+            struct tm *p;
+            time(&timep);
+            p = gmtime(&timep);
+
+            char str[12];
+            sprintf(str, "%d%d%d%d" , p->tm_hour, p->tm_min, p->tm_sec, left);
+
+            image c1 = crop_image(im, left, top, right-left, bot-top);
+            save_image(c1, str);
+            free_image(c1);
+
+            // draw_box_width(im, left, top, right, bot, width, red, green, blue);
+            // if (alphabet) {
+            //     image label = get_label(alphabet, names[class], (im.h*.03)/10);
+            //     draw_label(im, top + width, left, label, rgb);
+            // }
         }
     }
 }
@@ -413,7 +427,7 @@ void show_image_cv(image p, const char *name)
 
     IplImage *disp = cvCreateImage(cvSize(p.w,p.h), IPL_DEPTH_8U, p.c);
     int step = disp->widthStep;
-    cvNamedWindow(buff, CV_WINDOW_NORMAL); 
+    cvNamedWindow(buff, CV_WINDOW_NORMAL);
     //cvMoveWindow(buff, 100*(windows%10) + 200*(windows/10), 100*(windows%10));
     ++windows;
     for(y = 0; y < p.h; ++y){

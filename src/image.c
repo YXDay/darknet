@@ -225,7 +225,7 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
             p = gmtime(&timep);
 
             char str[12];
-            sprintf(str, "%d%d%d%d" , p->tm_hour, p->tm_min, p->tm_sec, left);
+            sprintf(str, "%d%d%d%d%d" , p->tm_hour, p->tm_min, p->tm_sec, left, num);
 
             image c1 = crop_image(im, left, top, right-left, bot-top);
             save_image(c1, str);
